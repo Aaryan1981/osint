@@ -1340,7 +1340,7 @@ class ChangeEmailVerifyView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        user.email = new_email[:30]
+        user.email = new_email[:100]
         user.save(update_fields=['email'])
         logger.info("Email changed | from=%s to=%s", _mask(current_email), _mask(new_email))
 
@@ -1433,7 +1433,7 @@ class ChangePhoneVerifyView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        user.phone = new_phone[:15]
+        user.phone = new_phone[:20]
         user.save(update_fields=['phone'])
         logger.info("Phone changed for %s → %s", _mask(email), _mask(new_phone))
 
