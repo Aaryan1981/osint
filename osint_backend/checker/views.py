@@ -1280,7 +1280,7 @@ class ChangeEmailRequestView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Store pending change: key = current_email, value = new_email
-        _registration_store[f'email_change_{current_email}'] = new_email
+        cache.set(f"pending_email_change_{current_email}", new_email, timeout=OTP_EXPIRY_MINUTES * 60)
 
         otp = _generate_otp()
         _store_otp(f'email_change_{current_email}', otp)
@@ -1329,7 +1329,8 @@ class ChangeEmailVerifyView(APIView):
                   else 'Invalid OTP. Please check the code and try again.'
             return Response({'error': msg}, status=status.HTTP_401_UNAUTHORIZED)
 
-        new_email = _registration_store.pop(f'email_change_{current_email}', None)
+        new_email = cache.get(f"pending_email_change_{current_email}")
+        cache.delete(f"pending_email_change_{current_email}")
         if not new_email:
             return Response({'error': 'No pending email change found. Please start over.'},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -1367,7 +1368,7 @@ class ChangePhoneRequestView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        _registration_store[f'phone_change_{email}'] = new_phone
+        cache.set(f"pending_phone_change_{email}", new_phone, timeout=OTP_EXPIRY_MINUTES * 60)
         otp = _generate_otp()
         _store_otp(f'phone_change_{email}', otp)
         logger.info("Phone change OTP generated for %s", _mask(email))
@@ -1421,7 +1422,8 @@ class ChangePhoneVerifyView(APIView):
                   else 'Invalid OTP. Please check the code and try again.'
             return Response({'error': msg}, status=status.HTTP_401_UNAUTHORIZED)
 
-        new_phone = _registration_store.pop(f'phone_change_{email}', None)
+        new_phone = cache.get(f"pending_phone_change_{email}")
+        cache.delete(f"pending_phone_change_{email}")
         if not new_phone:
             return Response({'error': 'No pending phone change found. Please start over.'},
                             status=status.HTTP_400_BAD_REQUEST)

@@ -31,15 +31,10 @@ class OsintConfig {
   /// Example: 'http://192.168.1.105:8000'
   ///
   /// Leave empty to auto-detect (emulator uses 10.0.2.2, desktop uses 127.0.0.1).
-  static const String _physicalDeviceLanIp = 'http://10.83.107.146:8000';
+  static const String _awsPublicIp = 'http://13.61.190.44:8000';
 
   static String get backendBaseUrl {
-    if (!kIsWeb && Platform.isAndroid) {
-      // Physical device needs the PC's LAN IP; emulator uses host alias 10.0.2.2
-      // We check for '10.0.2.2' if it's an emulator or use the LAN IP for physical
-      return _physicalDeviceLanIp;
-    }
-    return 'http://127.0.0.1:8000';
+    return _awsPublicIp;
   }
 
   // ---- Fallback: direct HIBP keys (used only if backend is unreachable) ----
