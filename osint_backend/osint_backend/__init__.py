@@ -5,5 +5,5 @@
 # This MUST be here so it's loaded before Django configures
 # the database connections.
 # ============================================================
-import pymysql
-pymysql.install_as_MySQLdb()
+# import pymysql
+# pymysql.install_as_MySQLdb()
