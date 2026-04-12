@@ -222,27 +222,27 @@ CORS_ALLOW_METHODS = [
 # HTTPS / Security Headers (active when DEBUG=False)
 # These headers harden the API against common web attacks.
 # ---------------------------------------------------------------------------
-if not DEBUG:
-    # Redirect all HTTP traffic to HTTPS (requires your web server to support it)
-    SECURE_SSL_REDIRECT = True
-
-    # Instruct browsers to only connect via HTTPS for 1 year
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-
-    # Prevent browsers from sniffing content types
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-
-    # Enable browser XSS filter
-    SECURE_BROWSER_XSS_FILTER = True
-
-    # Cookies only sent over HTTPS
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-    # Clickjacking protection
-    X_FRAME_OPTIONS = "DENY"
+# if not DEBUG:
+#     # Redirect all HTTP traffic to HTTPS (requires your web server to support it)
+#     SECURE_SSL_REDIRECT = True
+#
+#     # Instruct browsers to only connect via HTTPS for 1 year
+#     SECURE_HSTS_SECONDS = 31536000
+#     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+#     SECURE_HSTS_PRELOAD = True
+#
+#     # Prevent browsers from sniffing content types
+#     SECURE_CONTENT_TYPE_NOSNIFF = True
+#
+#     # Enable browser XSS filter
+#     SECURE_BROWSER_XSS_FILTER = True
+#
+#     # Cookies only sent over HTTPS
+#     SESSION_COOKIE_SECURE = True
+#     CSRF_COOKIE_SECURE = True
+#
+#     # Clickjacking protection
+#     X_FRAME_OPTIONS = "DENY"
 
 # When behind a trusted reverse proxy (nginx/ELB), trust its HTTPS header
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
