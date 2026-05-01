@@ -14,7 +14,7 @@ class User(models.Model):
     first_name    = models.CharField(max_length=50)
     last_name     = models.CharField(max_length=50)
     email         = models.CharField(unique=True, max_length=100)
-    phone         = models.CharField(unique=True, max_length=20)
+    phone         = models.CharField(max_length=20, blank=True, default='')
     password_hash = models.CharField(max_length=255)
     otp_code      = models.CharField(max_length=6, blank=True, null=True)
     otp_expiry    = models.DateTimeField(blank=True, null=True)

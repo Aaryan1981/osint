@@ -464,7 +464,7 @@ class RegisterView(APIView):
         cache.set(f"reg_{email}", {
             'first_name': first_name,
             'last_name':  last_name,
-            'phone':      phone or '0000000000',
+            'phone':      phone or '',
             'password':   password,
         }, timeout=OTP_EXPIRY_MINUTES * 60)
 
