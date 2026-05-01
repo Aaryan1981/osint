@@ -1624,3 +1624,33 @@ class TwoFALoginVerifyView(APIView):
             'token': token,
             'user': UserSerializer(user).data,
         })
+
+
+# ===========================================================================
+# View: GET /api/v1/report/download/
+# ===========================================================================
+from .pdf_generator import generate_user_report_pdf
+
+class DownloadReportView(APIView):
+    """
+    Generates a comprehensive PDF report on-the-fly and streams it to the client.
+    Requires Authentication.
+    """
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
+
+    def get(self, request):
+        user = _get_user_from_request(request)
+        if not user:
+            return Response({'error': 'Unauthorized. Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            logger.info(f"Generating PDF report for user: {user.email}")
+            pdf_bytes = generate_user_report_pdf(user.user_id)
+            
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            # The filename is downloaded by the Flutter app
+            response['Content-Disposition'] = f'attachment; filename="OSINT_Report_{user.first_name}.pdf"'
+            return response
+        except Exception as exc:
+            logger.error(f"Failed to generate PDF report: {exc}")
+            return Response({'error': 'Failed to generate report.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
