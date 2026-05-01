@@ -6,6 +6,7 @@ import 'services/api_service.dart';
 import 'services/osint_backend_service.dart';
 import 'services/whatsmyname_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 
 
 class SearchPage extends StatefulWidget {
@@ -308,8 +309,11 @@ class _SearchPageState extends State<SearchPage> {
                     const SizedBox(height: 32),
 
                     // ── Results or default saved profiles ──
-                    if (_searchResult != null)
+                    if (_searchResult != null) ...[
                       _buildResultSection(colorScheme),
+                      const SizedBox(height: 24),
+                      _buildDownloadReportButton(colorScheme, lp),
+                    ],
 
                     const SizedBox(height: 32),
                   ],
@@ -339,6 +343,43 @@ class _SearchPageState extends State<SearchPage> {
     }
     
     return _buildEmailResultSection(colorScheme, result);
+  }
+
+  bool _isDownloading = false;
+
+  Widget _buildDownloadReportButton(ColorScheme colorScheme, LanguageProvider lp) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _isDownloading ? null : _downloadReport,
+        icon: _isDownloading 
+          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          : const Icon(Icons.picture_as_pdf),
+        label: Text(_isDownloading ? "Generating..." : "Download PDF Report"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueAccent,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _downloadReport() async {
+    setState(() => _isDownloading = true);
+    try {
+      final path = await ApiService().downloadReport();
+      await OpenFile.open(path);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error downloading report: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDownloading = false);
+    }
   }
 
   // ────────────────────────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
@@ -128,6 +129,31 @@ class ApiService {
     }
   }
 
+
+  Future<String> downloadReport() async {
+    final token = await getToken();
+    if (token == null) throw Exception("Unauthorized: No token found.");
+
+    final uri = Uri.parse('${OsintConfig.backendBaseUrl}/api/v1/report/download/');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/pdf',
+      },
+    ).timeout(const Duration(seconds: 60));
+
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/OSINT_Report_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await file.writeAsBytes(bytes);
+      return file.path;
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['error']?.toString() ?? 'Failed to download report.');
+    }
+  }
 
   /// Registers a new user and triggers an OTP email via the Django backend.
   ///

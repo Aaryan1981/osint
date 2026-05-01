@@ -46,9 +46,7 @@ dependencies:
   path: ^1.9.0
   url_launcher: ^6.2.5
   local_auth: ^3.0.1
-  firebase_core: ^4.7.0
-  firebase_messaging: ^16.2.0
-  flutter_local_notifications: ^21.0.0
+  open_file_plus: ^4.0.0
 
 dev_dependencies:
   flutter_test:
