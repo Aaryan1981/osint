@@ -149,7 +149,13 @@ def generate_user_report_pdf(user_id: int) -> bytes:
         elements.append(Paragraph("No public username accounts found.", normal_style))
 
     # Build the PDF
-    doc.build(elements)
+    try:
+        doc.build(elements)
+    except Exception as e:
+        # Fallback: Create a very simple PDF if the complex one fails
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        doc.build([Paragraph(f"Error generating full report: {str(e)}", styles['Normal'])])
     
     pdf_bytes = buffer.getvalue()
     buffer.close()

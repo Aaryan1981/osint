@@ -151,8 +151,16 @@ class ApiService {
       await file.writeAsBytes(bytes);
       return file.path;
     } else {
-      final body = jsonDecode(response.body);
-      throw Exception(body['error']?.toString() ?? 'Failed to download report.');
+      // DEBUG: Show the actual body to see if it's HTML from Nginx/AWS
+      String errorDetail = response.body;
+      try {
+        final body = jsonDecode(response.body);
+        errorDetail = body['error']?.toString() ?? 'Unknown backend error';
+      } catch (_) {
+        // If not JSON, it's likely an HTML error page from Nginx
+        if (errorDetail.length > 100) errorDetail = errorDetail.substring(0, 100) + "...";
+      }
+      throw Exception('Server Error (${response.statusCode}): $errorDetail');
     }
   }
 
