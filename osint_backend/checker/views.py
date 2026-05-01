@@ -353,24 +353,12 @@ def _verify_otp(email: str, otp: str) -> tuple[bool, str]:
     return True, ''
 
 
+from .tasks import send_otp_email_task
+
 def _send_otp_email(email: str, otp: str) -> None:
-    """Sends OTP email in a background thread."""
-    thread = threading.Thread(
-        target=send_mail,
-        kwargs={
-            'subject': 'Your OSINT Data Analyzer Verification Code',
-            'message': (
-                f'Your verification code is: {otp}\n\n'
-                f'This code expires in {OTP_EXPIRY_MINUTES} minutes.\n'
-                f'Do not share this code with anyone.'
-            ),
-            'from_email': django_settings.DEFAULT_FROM_EMAIL,
-            'recipient_list': [email],
-            'fail_silently': False,
-        }
-    )
-    thread.daemon = True
-    thread.start()
+    """Sends OTP email via robust Celery background worker."""
+    # Use .delay() to push the task to Redis
+    send_otp_email_task.delay(email, otp)
 
 
 from django.contrib.auth.hashers import make_password, check_password
