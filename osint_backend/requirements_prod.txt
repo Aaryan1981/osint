@@ -16,3 +16,4 @@ phonenumbers
 beautifulsoup4
 trio
 httpx
+cryptography
