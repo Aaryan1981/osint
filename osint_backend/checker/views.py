@@ -464,7 +464,7 @@ class RegisterView(APIView):
         cache.set(f"reg_{email}", {
             'first_name': first_name,
             'last_name':  last_name,
-            'phone':      phone or '',
+            'phone':      phone or None,
             'password':   password,
         }, timeout=OTP_EXPIRY_MINUTES * 60)
 
@@ -531,7 +531,7 @@ class VerifyOTPView(APIView):
                 email           = email[:100],
                 first_name      = reg_data['first_name'][:50],
                 last_name       = reg_data['last_name'][:50],
-                phone           = reg_data['phone'][:20],
+                phone           = reg_data['phone'][:20] if reg_data['phone'] else None,
                 password_hash   = _hash_password(reg_data['password']),
                 is_verified     = True,
                 created_at      = dj_tz.now(),
