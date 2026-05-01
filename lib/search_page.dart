@@ -6,7 +6,8 @@ import 'services/api_service.dart';
 import 'services/osint_backend_service.dart';
 import 'services/whatsmyname_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:open_file_plus/open_file_plus.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class SearchPage extends StatefulWidget {
@@ -370,7 +371,7 @@ class _SearchPageState extends State<SearchPage> {
     setState(() => _isDownloading = true);
     try {
       final path = await ApiService().downloadReport();
-      await OpenFile.open(path);
+      await OpenFilex.open(path);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

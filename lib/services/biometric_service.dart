@@ -19,10 +19,6 @@ class BiometricService {
     try {
       return await _auth.authenticate(
         localizedReason: 'Please authenticate to log in to OSINT Analyzer',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
       );
     } on PlatformException catch (e) {
       print("Error during biometric authentication: $e");

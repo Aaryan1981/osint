@@ -1652,8 +1652,9 @@ class DownloadReportView(APIView):
             response['Content-Disposition'] = f'attachment; filename="OSINT_Report_{user.first_name}.pdf"'
             return response
         except Exception as exc:
-            logger.error(f"Failed to generate PDF report: {exc}")
-            return Response({'error': 'Failed to generate report.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            error_msg = f"Failed to generate report: {str(exc)}"
+            logger.error(error_msg)
+            return Response({'error': error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # ===========================================================================
 # View: /api/v1/osint/darkweb/

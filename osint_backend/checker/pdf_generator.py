@@ -8,6 +8,15 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from django.conf import settings
 from .models import User, EmailSearchResults, PhoneSearchResults, UsernameSearchResults
 
+import re
+
+def _clean_text(text):
+    """Removes or replaces characters that might crash ReportLab."""
+    if not text:
+        return "N/A"
+    # Remove non-printable and extreme unicode characters
+    return re.sub(r'[^\x20-\x7E\n]', '', str(text))
+
 def generate_user_report_pdf(user_id: int) -> bytes:
     """
     Generates a comprehensive OSINT PDF report for a given user.
@@ -59,7 +68,11 @@ def generate_user_report_pdf(user_id: int) -> bytes:
     if email_results.exists():
         data = [["Email Queried", "Breach Count", "Date Scanned"]]
         for res in email_results[:10]: # Top 10 recent
-            data.append([res.email, str(res.breach_count), res.created_at.strftime('%Y-%m-%d')])
+            data.append([
+                _clean_text(res.email), 
+                _clean_text(res.breach_count), 
+                res.created_at.strftime('%Y-%m-%d')
+            ])
             
         table = Table(data, colWidths=[200, 100, 150])
         table.setStyle(TableStyle([
@@ -83,10 +96,10 @@ def generate_user_report_pdf(user_id: int) -> bytes:
         data = [["Phone Number", "Carrier", "Location", "Spam Score"]]
         for res in phone_results[:10]:
             data.append([
-                res.phone_number, 
-                res.carrier or 'Unknown', 
-                res.location or 'Unknown', 
-                str(res.spam_score)
+                _clean_text(res.phone_number), 
+                _clean_text(res.carrier), 
+                _clean_text(res.location), 
+                _clean_text(res.spam_score)
             ])
             
         table = Table(data, colWidths=[120, 120, 130, 80])
@@ -115,7 +128,11 @@ def generate_user_report_pdf(user_id: int) -> bytes:
             key = f"{res.username}-{res.platform_name}"
             if key not in seen and len(seen) < 20: # Max 20 unique
                 seen.add(key)
-                data.append([res.username, res.platform_name, res.created_at.strftime('%Y-%m-%d')])
+                data.append([
+                    _clean_text(res.username), 
+                    _clean_text(res.platform_name), 
+                    res.created_at.strftime('%Y-%m-%d')
+                ])
                 
         table = Table(data, colWidths=[150, 150, 150])
         table.setStyle(TableStyle([
