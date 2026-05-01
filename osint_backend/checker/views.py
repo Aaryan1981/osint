@@ -685,7 +685,13 @@ class DeleteAccountView(APIView):
             return Response({'error': 'Invalid password.'}, status=status.HTTP_401_UNAUTHORIZED)
             
         logger.info("Account deletion | email=%s", _mask(email))
-        user.delete()
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM users WHERE email = %s", [email])
+        except Exception as exc:
+            logger.error("Failed to delete user: %s", exc)
+            return Response({'error': f'Database error during deletion: {str(exc)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({'message': 'Account deleted successfully.'}, status=status.HTTP_200_OK)
 
