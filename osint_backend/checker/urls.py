@@ -50,6 +50,8 @@ from .views import (
     ChangePasswordView,
     # Two-Factor Auth
     TwoFAStatusView, TwoFAToggleRequestView, TwoFAToggleVerifyView, TwoFALoginVerifyView,
+    # Dark Web
+    DarkWebSearchView,
 )
 from . import views
 
@@ -98,6 +100,7 @@ urlpatterns = [
     path('osint/phone/<str:phone>/', PhoneOsintView.as_view(), name='osint-phone-param'),
     path('osint/wmn/', WmnUsernameView.as_view(), name='osint-wmn'),
     path('osint/holehe/', HolehEmailView.as_view(), name='osint-holehe'),
+    path('osint/darkweb/', DarkWebSearchView.as_view(), name='osint-darkweb'),
     path('auth/change-email/request/', ChangeEmailRequestView.as_view(), name='change-email-request'),
     path('auth/change-email/verify/', ChangeEmailVerifyView.as_view(), name='change-email-verify'),
     path('auth/change-phone/request/', ChangePhoneRequestView.as_view(), name='change-phone-request'),

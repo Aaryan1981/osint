@@ -128,6 +128,26 @@ class Report(models.Model):
         return f'Report #{self.report_id} - {self.report_name}'
 
 # ---------------------------------------------------------------------------
+# dark web / pastebin results
+# ---------------------------------------------------------------------------
+class DarkWebResult(models.Model):
+    id          = models.AutoField(primary_key=True)
+    user        = models.ForeignKey(User, on_delete=models.CASCADE, db_column='user_id')
+    query       = models.CharField(max_length=255)
+    source_type = models.CharField(max_length=20, default='dark_web') # 'dark_web' or 'pastebin'
+    title       = models.CharField(max_length=500, blank=True, null=True)
+    url         = models.URLField(max_length=1000)
+    snippet     = models.TextField(blank=True, null=True)
+    found_at    = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        managed = True
+        db_table = 'dark_web_results'
+
+    def __str__(self):
+        return f'Leak Found: {self.source_type} - {self.query}'
+
+# ---------------------------------------------------------------------------
 # alerts
 # ---------------------------------------------------------------------------
 class Alert(models.Model):

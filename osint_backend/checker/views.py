@@ -1654,3 +1654,51 @@ class DownloadReportView(APIView):
         except Exception as exc:
             logger.error(f"Failed to generate PDF report: {exc}")
             return Response({'error': 'Failed to generate report.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ===========================================================================
+# View: /api/v1/osint/darkweb/
+# ===========================================================================
+from .tasks import run_dark_web_scan_task
+from .models import DarkWebResult
+
+class DarkWebSearchView(APIView):
+    """
+    Triggers a dark web scan or retrieves existing dark web leak results.
+    """
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
+
+    def get(self, request):
+        user = _get_user_from_request(request)
+        if not user:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        results = DarkWebResult.objects.filter(user=user).order_by('-found_at')
+        data = [{
+            'id': r.id,
+            'query': r.query,
+            'source_type': r.source_type,
+            'title': r.title,
+            'url': r.url,
+            'snippet': r.snippet,
+            'found_at': r.found_at
+        } for r in results]
+        
+        return Response({'results': data})
+
+    def post(self, request):
+        user = _get_user_from_request(request)
+        if not user:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        query = request.data.get('query', '').strip()
+        if not query:
+            return Response({'error': 'Query is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Trigger the celery task
+        run_dark_web_scan_task.delay(user.user_id, query)
+        
+        return Response({
+            'message': f'Dark web scan for "{query}" has been started in the background.',
+            'status': 'pending'
+        })
+
