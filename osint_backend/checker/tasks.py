@@ -28,3 +28,5 @@ def send_otp_email_task(self, email: str, otp: str):
         logger.error(f"Failed to send OTP email to {email}: {exc}")
         # Retry the task with an exponential backoff
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
+
+

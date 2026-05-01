@@ -35,7 +35,7 @@ from .views import (
     # Monitoring
     MonitoringView,
     # Reports
-    ReportsView,
+    ReportsView, DownloadReportView,
     # Alerts
     AlertsView, AlertReadView,
     # Feedback
@@ -82,6 +82,7 @@ urlpatterns = [
 
     # ── Reports ───────────────────────────────────────────────────────────────
     path("reports/", ReportsView.as_view(), name="reports"),
+    path("report/download/", DownloadReportView.as_view(), name="report-download"),
 
     # ── Alerts ────────────────────────────────────────────────────────────────
     path("alerts/",               AlertsView.as_view(),           name="alerts"),
