@@ -4,8 +4,19 @@ import 'login_page.dart';
 import 'theme_provider.dart';
 import 'language_provider.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'services/notification_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp();
+    await NotificationService().initialize();
+  } catch (e) {
+    print("Firebase initialization failed: $e");
+  }
+
   runApp(
     MultiProvider(
       providers: [

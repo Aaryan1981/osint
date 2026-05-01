@@ -55,6 +55,33 @@ class ApiService {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
+  // Biometric Storage
+  // ────────────────────────────────────────────────────────────────────────────
+
+  Future<void> saveCredentials(String email, String password) async {
+    await _storage.write(key: 'biometric_email', value: email);
+    await _storage.write(key: 'biometric_password', value: password);
+    await _storage.write(key: 'biometric_enabled', value: 'true');
+  }
+
+  Future<Map<String, String?>> getStoredCredentials() async {
+    final email = await _storage.read(key: 'biometric_email');
+    final password = await _storage.read(key: 'biometric_password');
+    return {'email': email, 'password': password};
+  }
+
+  Future<bool> isBiometricEnabled() async {
+    final val = await _storage.read(key: 'biometric_enabled');
+    return val == 'true';
+  }
+
+  Future<void> disableBiometrics() async {
+    await _storage.delete(key: 'biometric_enabled');
+    await _storage.delete(key: 'biometric_email');
+    await _storage.delete(key: 'biometric_password');
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
   // Auth Endpoints (MOCKED)
   // ────────────────────────────────────────────────────────────────────────────
 

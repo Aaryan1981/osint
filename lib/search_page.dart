@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'language_provider.dart';
@@ -31,6 +32,31 @@ class _SearchPageState extends State<SearchPage> {
   bool _holehScanning = false;
   bool _holehStarted = false;     // true once _startHoleheScan has been called
   List<Map<String, dynamic>> _holehResults = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedResult();
+  }
+
+  Future<void> _loadCachedResult() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('last_search_result');
+    final cachedQuery = prefs.getString('last_search_query');
+    if (cachedData != null && cachedQuery != null) {
+      setState(() {
+        _searchResult = jsonDecode(cachedData);
+        _lastQuery = cachedQuery;
+        _searchController.text = cachedQuery;
+      });
+    }
+  }
+
+  Future<void> _cacheResult(String query, Map<String, dynamic> result) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_search_result', jsonEncode(result));
+    await prefs.setString('last_search_query', query);
+  }
 
   @override
   void dispose() {
@@ -85,6 +111,7 @@ class _SearchPageState extends State<SearchPage> {
           _searchResult = result;
           _isSearching = false;
         });
+        _cacheResult(query, result);
       }
     } catch (e) {
       if (mounted) {

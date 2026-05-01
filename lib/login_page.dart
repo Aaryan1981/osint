@@ -5,6 +5,7 @@ import 'register_page.dart';
 import 'forgot_password_page.dart';
 import 'home_page.dart';
 import 'services/api_service.dart';
+import 'services/biometric_service.dart';
 import 'two_fa_login_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -20,12 +21,95 @@ class _LoginPageState extends State<LoginPage> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  
+  final _biometricService = BiometricService();
+  bool _isBiometricEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    final enabled = await ApiService().isBiometricEnabled();
+    final available = await _biometricService.isBiometricAvailable();
+    if (mounted) {
+      setState(() {
+        _isBiometricEnabled = enabled && available;
+      });
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    final authenticated = await _biometricService.authenticate();
+    if (authenticated) {
+      final creds = await ApiService().getStoredCredentials();
+      if (creds['email'] != null && creds['password'] != null) {
+        try {
+          final result = await ApiService().login(creds['email']!, creds['password']!);
+          if (!mounted) return;
+          
+          if (result['two_fa_required'] == true) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TwoFALoginPage(
+                  email: creds['email']!,
+                  devOtp: result['otp']?.toString(),
+                ),
+              ),
+            );
+            return;
+          }
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Biometric login failed: $e"), backgroundColor: Colors.redAccent),
+          );
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showBiometricPrompt(String email, String password) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Enable Biometrics?"),
+        content: const Text("Would you like to enable Fingerprint/FaceID login for next time?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Maybe Later"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await ApiService().saveCredentials(email, password);
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Biometrics enabled!")),
+                );
+                _checkBiometrics();
+              }
+            },
+            child: const Text("Enable"),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleLogin() async {
@@ -55,6 +139,17 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
         );
+
+        // After successful login, if biometrics not already enabled, ask to enable
+        if (!_isBiometricEnabled) {
+          final available = await _biometricService.isBiometricAvailable();
+          if (available && mounted) {
+            _showBiometricPrompt(
+              _emailController.text.trim(),
+              _passwordController.text.trim(),
+            );
+          }
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString()), backgroundColor: Colors.redAccent),
@@ -189,6 +284,22 @@ class _LoginPageState extends State<LoginPage> {
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
+                  if (_isBiometricEnabled) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: _handleBiometricLogin,
+                      icon: const Icon(Icons.fingerprint, color: Colors.blueAccent),
+                      label: const Text(
+                        "Login with Biometrics",
+                        style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Colors.blueAccent),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   TextButton(
                     onPressed: () {
