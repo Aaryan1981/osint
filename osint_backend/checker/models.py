@@ -5,6 +5,7 @@ Django ORM models mapping exactly to the custom MySQL data dictionary.
 """
 from django.db import models # type: ignore
 from django.utils import timezone # type: ignore
+from .encryption import EncryptedCharField
 
 # ---------------------------------------------------------------------------
 # users
@@ -42,7 +43,7 @@ class ScanRequest(models.Model):
     input_id     = models.AutoField(primary_key=True)
     user         = models.ForeignKey(User, on_delete=models.CASCADE, db_column='user_id')
     input_type   = models.CharField(max_length=10, choices=INPUT_TYPE_CHOICES)
-    input_value  = models.CharField(max_length=255, blank=True, null=True)
+    input_value  = EncryptedCharField(max_length=255, blank=True, null=True)
     face_path    = models.CharField(max_length=500, blank=True, null=True)
     status       = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
     requested_at = models.DateTimeField(default=timezone.now)
@@ -86,7 +87,7 @@ class ContinuousMonitoring(models.Model):
     monitor_id        = models.AutoField(primary_key=True)
     user              = models.ForeignKey(User, on_delete=models.CASCADE, db_column='user_id')
     input_type        = models.CharField(max_length=10, choices=INPUT_TYPE_CHOICES)
-    input_value       = models.CharField(max_length=255, blank=True, null=True)
+    input_value       = EncryptedCharField(max_length=255, blank=True, null=True)
     face_path         = models.CharField(max_length=500, blank=True, null=True)
     status            = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
     frequency_minutes = models.IntegerField(default=60)
@@ -183,7 +184,7 @@ class UsersInputLogs(models.Model):
     log_id      = models.AutoField(primary_key=True)
     user        = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, db_column='user_id')
     search_type = models.CharField(max_length=20)
-    search_query= models.CharField(max_length=255)
+    search_query= EncryptedCharField(max_length=255)
     user_ip     = models.CharField(max_length=45, blank=True, null=True)
     status      = models.CharField(max_length=20, default='pending')
     created_at  = models.DateTimeField(default=timezone.now)
@@ -200,7 +201,7 @@ class EmailSearchResults(models.Model):
     id             = models.AutoField(primary_key=True)
     log            = models.ForeignKey(UsersInputLogs, on_delete=models.CASCADE, db_column='log_id')
     user           = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, db_column='user_id')
-    email          = models.CharField(max_length=255)
+    email          = EncryptedCharField(max_length=255)
     is_deliverable = models.BooleanField(default=False)
     is_disposable  = models.BooleanField(default=False)
     breach_count   = models.IntegerField(default=0)
@@ -219,7 +220,7 @@ class PhoneSearchResults(models.Model):
     id           = models.AutoField(primary_key=True)
     log          = models.ForeignKey(UsersInputLogs, on_delete=models.CASCADE, db_column='log_id')
     user         = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, db_column='user_id')
-    phone_number = models.CharField(max_length=20)
+    phone_number = EncryptedCharField(max_length=20)
     country_code = models.CharField(max_length=5, blank=True, null=True)
     carrier      = models.CharField(max_length=100, blank=True, null=True)
     line_type    = models.CharField(max_length=50, blank=True, null=True)

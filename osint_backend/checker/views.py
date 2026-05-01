@@ -373,9 +373,25 @@ def _send_otp_email(email: str, otp: str) -> None:
     thread.start()
 
 
+from django.contrib.auth.hashers import make_password, check_password
+
 def _hash_password(password: str) -> str:
-    """SHA-256 password hash for storage. Replace with bcrypt in production."""
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+    """Secure password hash using Django's default hasher."""
+    return make_password(password)
+
+def _verify_password(user, raw_password: str) -> bool:
+    """Verifies a password against the secure hash OR the legacy SHA-256 hash. Upgrades legacy hashes automatically."""
+    if user.password_hash.startswith(('pbkdf2_sha256$', 'bcrypt$', 'argon2')):
+        return check_password(raw_password, user.password_hash)
+    else:
+        # Legacy SHA-256 check
+        import hashlib
+        legacy_hash = hashlib.sha256(raw_password.encode('utf-8')).hexdigest()
+        if user.password_hash == legacy_hash:
+            user.password_hash = make_password(raw_password)
+            user.save(update_fields=['password_hash'])
+            return True
+        return False
 
 
 def _make_token(email: str) -> str:
@@ -602,7 +618,7 @@ class LoginView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if user.password_hash != _hash_password(password):
+        if not _verify_password(user, password):
             return Response({'error': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_verified:
@@ -681,7 +697,7 @@ class DeleteAccountView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if user.password_hash != _hash_password(password):
+        if not _verify_password(user, password):
             return Response({'error': 'Invalid password.'}, status=status.HTTP_401_UNAUTHORIZED)
             
         logger.info("Account deletion | email=%s", _mask(email))
@@ -1471,7 +1487,7 @@ class ChangePasswordView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if user.password_hash != _hash_password(old_password):
+        if not _verify_password(user, old_password):
             return Response({'error': 'Current password is incorrect.'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
